@@ -25,7 +25,7 @@ export default function DrawerLayout(){
           <Drawer.Screen name="exam" options={{title:'Competitive Exam Prep',headerStyle: {
             backgroundColor: '#007681'
           },headerTintColor: '#fff',}}/>
-          <Drawer.Screen name="tools" options={{title:'Other Tools',headerStyle: {
+          <Drawer.Screen name="progress" options={{title:'Track Your Progress',headerStyle: {
             backgroundColor: '#007681'
           },headerTintColor: '#fff',}}/>
         </Drawer>

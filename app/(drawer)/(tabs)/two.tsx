@@ -1,99 +1,134 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity } from 'react-native';
+import React, { useRef, useEffect, useState } from 'react';
+import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
+import { RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
+import { useIsFocused } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Calendar } from 'react-native-calendars';
 
-const Planner = () => {
-  const [tasks, setTasks] = useState([]);
-  const [newTaskText, setNewTaskText] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+const TabOneScreen = () => {
+  const editorRef = useRef(null);
+  const isFocused = useIsFocused();
+  const [selectedColor, setSelectedColor] = useState('#000000');
 
+  // Function to set bold formatting
+  const setBold = () => {
+    editorRef.current?.sendAction('bold');
+  };
+
+  // Function to set italic formatting
+  const setItalic = () => {
+    editorRef.current?.sendAction('italic');
+  };
+
+  // Function to set underline formatting
+  const setUnderline = () => {
+    editorRef.current?.sendAction('underline');
+  };
+
+  // Function to set font size
+  const setFontSize = (size) => {
+    editorRef.current?.sendAction('fontSize', String(size));
+  };
+
+  // Function to set font color
+  const setFontColor = (color) => {
+    editorRef.current?.sendAction('foreColor', color);
+    setSelectedColor(color);
+  };
+
+  // Function to set highlight text
+  const setHighlightText = () => {
+    editorRef.current?.sendAction('hiliteColor', 'yellow');
+  };
+
+  // Handle editor focus when the screen is focused
   useEffect(() => {
-    loadData();
+    if (isFocused && editorRef.current) {
+      editorRef.current.focusContentEditor();
+    }
+  }, [isFocused]);
+
+  // Save the content to AsyncStorage when component unmounts
+  useEffect(() => {
+    return () => {
+      saveContentToAsyncStorage();
+    };
   }, []);
 
+  // Load the content from AsyncStorage when the component mounts
   useEffect(() => {
-    saveData();
-  }, [tasks]);
+    loadContentFromAsyncStorage();
+  }, []);
 
-  const loadData = async () => {
+  // Function to save the content to AsyncStorage
+  const saveContentToAsyncStorage = async () => {
     try {
-      const savedTasks = await AsyncStorage.getItem('tasks');
-      if (savedTasks) {
-        setTasks(JSON.parse(savedTasks));
+      const content = await editorRef.current?.getContentHtml();
+      if (content) {
+        await AsyncStorage.setItem('editorContent', content);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.log('Error saving content to AsyncStorage:', error);
     }
   };
 
-  const saveData = async () => {
+  // Function to load the content from AsyncStorage
+  const loadContentFromAsyncStorage = async () => {
     try {
-      await AsyncStorage.setItem('tasks', JSON.stringify(tasks));
+      const content = await AsyncStorage.getItem('editorContent');
+      if (content && editorRef.current) {
+        editorRef.current?.setContentHtml(content);
+      }
     } catch (error) {
-      console.error('Error saving data:', error);
+      console.log('Error loading content from AsyncStorage:', error);
     }
-  };
-
-  const handleAddTask = () => {
-    if (!newTaskText.trim() || !selectedDate) {
-      return;
-    }
-
-    setTasks((prevTasks) => {
-      const updatedTasks = {
-        ...prevTasks,
-        [selectedDate]: [...(prevTasks[selectedDate] || []), newTaskText],
-      };
-      setNewTaskText('');
-      return updatedTasks;
-    });
-  };
-
-  const renderTask = ({ item }) => {
-    return (
-      <View style={styles.taskContainer}>
-        <Text style={styles.taskText}>{item}</Text>
-      </View>
-    );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Daily Planner</Text>
-
-      <View style={styles.calendarContainer}>
-        <Calendar
-          onDayPress={(day) => setSelectedDate(day.dateString)}
-          markedDates={{
-            [selectedDate]: { selected: true, selectedColor: 'blue' },
-          }}
-        />
-      </View>
-
-      <View style={styles.addTaskContainer}>
-        <TextInput
-          style={styles.input}
-          value={newTaskText}
-          onChangeText={(text) => setNewTaskText(text)}
-          placeholder="Enter your task"
-        />
-
-        <TouchableOpacity style={styles.addButton} onPress={handleAddTask}>
-          <Text style={styles.buttonText}>Add Task</Text>
-        </TouchableOpacity>
-      </View>
-
-      {selectedDate && tasks[selectedDate] && (
-        <>
-          <Text style={styles.sectionTitle}>Tasks for {selectedDate}:</Text>
-          <FlatList
-            data={tasks[selectedDate]}
-            renderItem={renderTask}
-            keyExtractor={(item, index) => `task-${index}`}
-          />
-        </>
-      )}
+      <RichToolbar
+        editor={editorRef}
+        selectedIconTint="#2095F2"
+        disabledIconTint="#bfbfbf"
+        onPressAddImage={() => {}}
+        onPressBold={setBold}
+        onPressItalic={setItalic}
+        onPressUnderline={setUnderline}
+        onPressFontSize={setFontSize}
+        selectedFontSize={16}
+        iconMap={{
+          fontSize: Platform.OS === 'ios' ? 'format-size' : 'format-size',
+          fontColor: Platform.OS === 'ios' ? 'format-color-text' : 'format-color-text',
+          highlight: Platform.OS === 'ios' ? 'highlight' : 'highlight',
+        }}
+        selectedColor={selectedColor}
+        onPressTextColor={setFontColor}
+        onPressHighlight={setHighlightText}
+      />
+      <RichEditor
+        ref={editorRef}
+        style={styles.editor}
+        initialContentHTML=""
+        useContainer={false}
+      />
+      <RichToolbar
+        editor={editorRef}
+        selectedIconTint="#2095F2"
+        disabledIconTint="#bfbfbf"
+        onPressAddImage={() => {}}
+        onPressBold={setBold}
+        onPressItalic={setItalic}
+        onPressUnderline={setUnderline}
+        onPressFontSize={setFontSize}
+        selectedFontSize={16}
+        iconMap={{
+          fontSize: Platform.OS === 'ios' ? 'format-size' : 'format-size',
+          fontColor: Platform.OS === 'ios' ? 'format-color-text' : 'format-color-text',
+          highlight: Platform.OS === 'ios' ? 'highlight' : 'highlight',
+        }}
+        selectedColor={selectedColor}
+        onPressTextColor={setFontColor}
+        onPressHighlight={setHighlightText}
+      />
     </View>
   );
 };
@@ -101,59 +136,10 @@ const Planner = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  calendarContainer: {
-    marginBottom: 16,
-  },
-  addTaskContainer: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  input: {
+  editor: {
     flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    marginRight: 8,
-    paddingHorizontal: 8,
-    borderRadius:25
-  },
-  addButton: {
-    backgroundColor: 'red',
-    padding: 10,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  taskContainer: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 15,
-    marginBottom: 8,
-    backgroundColor:'lightblue',
-    borderRadius:20
-  },
-  taskText: {
-    fontSize: 20,
-    fontWeight:'600',
-    color:'blue'
   },
 });
 
-export default Planner;
+export default TabOneScreen;

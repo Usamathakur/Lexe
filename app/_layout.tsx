@@ -58,7 +58,7 @@ function RootLayoutNav() {
         <Stack.Screen name="points" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
         <Stack.Screen name="pyq" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
         <Stack.Screen name="tests" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="modal" options={{presentation: 'modal',headerTitle: 'QR Code Scanner',}}/>
       </Stack>
     </ThemeProvider>
   );

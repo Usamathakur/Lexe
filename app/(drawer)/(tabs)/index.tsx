@@ -1,85 +1,110 @@
-import React, { useRef, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
-import { RichEditor, RichToolbar } from 'react-native-pell-rich-editor';
-import { useIsFocused } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Calendar } from 'react-native-calendars';
 
-const TabOneScreen = () => {
-  const editorRef = useRef(null);
-  const isFocused = useIsFocused();
+const Planner = () => {
+  const [tasks, setTasks] = useState([]);
+  const [newTaskText, setNewTaskText] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-  // Function to set bold formatting
-  const setBold = () => {
-    editorRef.current?.sendAction('bold');
-  };
-
-  // Function to set italic formatting
-  const setItalic = () => {
-    editorRef.current?.sendAction('italic');
-  };
-
-  // Function to set underline formatting
-  const setUnderline = () => {
-    editorRef.current?.sendAction('underline');
-  };
-
-  // Handle editor focus when the screen is focused
   useEffect(() => {
-    if (isFocused && editorRef.current) {
-      editorRef.current.focusContentEditor();
-    }
-  }, [isFocused]);
-
-  // Save the content to AsyncStorage when component unmounts
-  useEffect(() => {
-    return () => {
-      saveContentToAsyncStorage();
-    };
+    loadData();
   }, []);
 
-  // Load the content from AsyncStorage when the component mounts
   useEffect(() => {
-    loadContentFromAsyncStorage();
-  }, []);
+    saveData();
+  }, [tasks]);
 
-  // Function to save the content to AsyncStorage
-  const saveContentToAsyncStorage = async () => {
+  const loadData = async () => {
     try {
-      const content = await editorRef.current?.getContentHtml();
-      if (content) {
-        await AsyncStorage.setItem('editorContent', content);
+      const savedTasks = await AsyncStorage.getItem('tasks');
+      if (savedTasks) {
+        setTasks(JSON.parse(savedTasks));
       }
     } catch (error) {
-      console.log('Error saving content to AsyncStorage:', error);
+      console.error('Error loading data:', error);
     }
   };
 
-  // Function to load the content from AsyncStorage
-  const loadContentFromAsyncStorage = async () => {
+  const saveData = async () => {
     try {
-      const content = await AsyncStorage.getItem('editorContent');
-      if (content && editorRef.current) {
-        editorRef.current?.setContentHtml(content);
-      }
+      await AsyncStorage.setItem('tasks', JSON.stringify(tasks));
     } catch (error) {
-      console.log('Error loading content from AsyncStorage:', error);
+      console.error('Error saving data:', error);
     }
+  };
+
+  const handleAddTask = () => {
+    if (!newTaskText.trim() || !selectedDate) {
+      return;
+    }
+
+    setTasks((prevTasks) => {
+      const updatedTasks = {
+        ...prevTasks,
+        [selectedDate]: [...(prevTasks[selectedDate] || []), newTaskText],
+      };
+      setNewTaskText('');
+      return updatedTasks;
+    });
+  };
+
+  const handleDeleteTask = (date, index) => {
+    setTasks((prevTasks) => {
+      const updatedTasks = { ...prevTasks };
+      updatedTasks[date].splice(index, 1);
+      return updatedTasks;
+    });
+  };
+
+  const renderTask = ({ item, index }) => {
+    return (
+      <View style={styles.taskContainer}>
+        <Text style={styles.taskText}>{item}</Text>
+        <TouchableOpacity onPress={() => handleDeleteTask(selectedDate, index)} style={styles.deleteButton}>
+          <Text style={styles.deleteButtonText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
-      <RichToolbar
-        editor={editorRef}
-        selectedIconTint="#2095F2"
-        disabledIconTint="#bfbfbf"
-        onPressAddImage={() => {}}
-      />
-      <RichEditor
-        ref={editorRef}
-        style={styles.editor}
-        initialContentHTML=""
-        useContainer={false}
-      />
+      <Text style={styles.title}>Daily Planner</Text>
+
+      <View style={styles.calendarContainer}>
+        <Calendar
+          onDayPress={(day) => setSelectedDate(day.dateString)}
+          markedDates={{
+            [selectedDate]: { selected: true, selectedColor: 'blue' },
+          }}
+        />
+      </View>
+
+      <View style={styles.addTaskContainer}>
+        <TextInput
+          style={styles.input}
+          value={newTaskText}
+          onChangeText={(text) => setNewTaskText(text)}
+          placeholder="Enter your task"
+        />
+
+        <TouchableOpacity style={styles.addButton} onPress={handleAddTask}>
+          <Text style={styles.buttonText}>Add Task</Text>
+        </TouchableOpacity>
+      </View>
+
+      {selectedDate && tasks[selectedDate] && (
+        <>
+          <Text style={styles.sectionTitle}>Tasks for {selectedDate}:</Text>
+          <FlatList
+            data={tasks[selectedDate]}
+            renderItem={renderTask}
+            keyExtractor={(item, index) => `task-${index}`}
+          />
+        </>
+      )}
     </View>
   );
 };
@@ -87,10 +112,74 @@ const TabOneScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+    backgroundColor: '#fff',
   },
-  editor: {
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  calendarContainer: {
+    marginBottom: 16,
+  },
+  addTaskContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  input: {
     flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginRight: 8,
+    paddingHorizontal: 8,
+    borderRadius: 25,
+  },
+  addButton: {
+    backgroundColor: 'blue',
+    padding: 10,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  taskContainer: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 15,
+    marginBottom: 8,
+    backgroundColor: 'lightblue',
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  taskText: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '600',
+    color: 'blue',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    padding: 8,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
-export default TabOneScreen;
+export default Planner;

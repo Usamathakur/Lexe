@@ -25,8 +25,8 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Idea Center',
-            tabBarIcon: ({ color }) => <TabBarIcon name="lightbulb-o" color={color} />,
+            title: 'Planner',
+            tabBarIcon: ({ color }) => <TabBarIcon name="calendar-o" color={color} />,
             headerLeft:()=>(
               <AntDesign name="menuunfold" size={24} color="white" style={{padding:10}}/>
             ),
@@ -37,9 +37,9 @@ export default function TabLayout() {
                 <Pressable>
                   {({ pressed }) => (
                     <FontAwesome
-                      name="info-circle"
+                      name="camera-retro"
                       size={25}
-                      color={Colors[colorScheme ?? 'light'].text}
+                      color='white'
                       style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
                     />
                   )}
@@ -52,10 +52,10 @@ export default function TabLayout() {
         <Tabs.Screen
           name="two"
           options={{
-            title: 'Planner',
+            title: 'Idea Center',
             headerStyle: { backgroundColor: '#007681' },
             headerTintColor: 'white',
-            tabBarIcon: ({ color }) => <TabBarIcon name="calendar-o" color={color}/>,
+            tabBarIcon: ({ color }) => <TabBarIcon name="lightbulb-o" color={color}/>,
           }}
         />
       </Tabs>
