@@ -12,7 +12,7 @@ export {
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: '(drawer)',
 };
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -48,7 +48,16 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+        <Stack.Screen name="calculator" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="formula" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="history" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="hours" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="onbook" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="papers" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="points" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="pyq" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
+        <Stack.Screen name="tests" options={{ headerTintColor:'white',headerStyle:{backgroundColor:'#007681'} }}/>
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
